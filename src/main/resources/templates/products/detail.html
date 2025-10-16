@@ -234,12 +234,20 @@
                                         </svg>
                                         Thêm vào giỏ hàng
                                     </button>
+
                                     <button class="btn-wishlist"
+        th:data-product-id="${product.id}"
+        th:classappend="${#sets.contains(wishlistProductIds, product.id)} ? 'active'"
+        sec:authorize="isAuthenticated()">
+    <i th:if="${#sets.contains(wishlistProductIds, product.id)}" class="fa-solid fa-heart"></i>
+    <i th:unless="${#sets.contains(wishlistProductIds, product.id)}" class="fa-regular fa-heart"></i>
+</button>
+                                    <!-- <button class="btn-wishlist"
                                             th:data-product-id="${product.id}"
                                             th:classappend="${isInWishlist} ? 'active'">
                                         <i th:if="${isInWishlist}" class="fa-solid fa-heart"></i>
                                         <i th:unless="${isInWishlist}" class="fa-regular fa-heart"></i>
-                                    </button>
+                                    </button> -->
                                 </div>
                             
                                 <!-- Nút mua ngay -->

@@ -194,7 +194,7 @@ public class ProductController {
      * @return Product detail template
      */
     @GetMapping("/{id}")
-    public String productDetail(@PathVariable Long id, Model model) {
+    public String productDetail(@PathVariable Long id, Model model,Authentication authentication) {
         try {
             log.info("Product detail request for ID: {}", id);
 
@@ -235,6 +235,19 @@ public class ProductController {
             model.addAttribute("reviews", reviewsPage.getContent());
             model.addAttribute("reviewsPage", reviewsPage);
             model.addAttribute("relatedProducts", relatedProducts);
+             // 5. Wishlist product IDs for current user (for SSR wishlist state)
+            try {
+                if (authentication != null && authentication.isAuthenticated()) {
+                    userRepository.findByEmail(authentication.getName()).ifPresent(user -> {
+                        var ids = wishlistService.getWishlistProductIds(user.getId());
+                        model.addAttribute("wishlistProductIds", new java.util.HashSet<>(ids));
+                    });
+                } else {
+                    model.addAttribute("wishlistProductIds", java.util.Collections.emptySet());
+                }
+            } catch (Exception ex) {
+                model.addAttribute("wishlistProductIds", java.util.Collections.emptySet());
+            }
 
             // Breadcrumbs removed - no longer extending BaseController
 
