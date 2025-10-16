@@ -88,17 +88,30 @@ public class ProductController {
 
             Page<Product> productsPage;
             
-            // 2. Apply Filtering Logic (Priority: Category -> Search -> Sort)
-            if (categoryId != null) {
-                // Filter by category
-                productsPage = productService.findByCatalog(categoryId, pageable);
-                model.addAttribute("categoryId", categoryId);
-                log.info("Filter by category ID: {}, found {} products", categoryId, productsPage.getTotalElements());
-            } else if (search != null && !search.trim().isEmpty()) {
-                // Filter by search
-                productsPage = productService.searchProducts(search, pageable);
-                model.addAttribute("searchQuery", search);
-                log.info("Search performed for: '{}', found {} products", search, productsPage.getTotalElements());
+            // 2. Apply Combined Filtering Logic (Category AND Search)
+            boolean isCatalogFilter = categoryId != null && categoryId > 0;
+            boolean isSearchFilter = search != null && !search.trim().isEmpty();
+
+            if (isCatalogFilter || isSearchFilter) {
+                // Use combined filter method for both catalog AND search
+                productsPage = productService.findByCatalogAndSearch(categoryId, search, pageable);
+                
+                if (isCatalogFilter) {
+                    model.addAttribute("categoryId", categoryId);
+                }
+                if (isSearchFilter) {
+                    model.addAttribute("searchQuery", search);
+                }
+
+                if (isCatalogFilter && isSearchFilter) {
+                    log.info("Combined filter: Category ID {} AND Search '{}', found {} products", 
+                            categoryId, search, productsPage.getTotalElements());
+                } else if (isCatalogFilter) {
+                    log.info("Filter by category ID: {}, found {} products", categoryId, productsPage.getTotalElements());
+                } else {
+                    log.info("Search performed for: '{}', found {} products", search, productsPage.getTotalElements());
+                }
+                
             } else {
                 // Default sorting
                 productsPage = productService.getProductsSorted(sort, direction, pageable);

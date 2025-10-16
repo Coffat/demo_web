@@ -74,4 +74,14 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
        @Query("SELECT COUNT(r) FROM Review r WHERE r.product.id = :productId")
        Long getReviewCountByProductId(@Param("productId") Long productId);
+
+       // Combined filter: Catalog ID AND Search keyword
+       @Query("SELECT p FROM Product p WHERE " +
+                     "(:catalogId IS NULL OR p.catalog.id = :catalogId) AND " +
+                     "(:keyword IS NULL OR :keyword = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+
+       Page<Product> findByCatalogIdAndNameContainingIgnoreCase(
+               @Param("catalogId") Long catalogId, 
+               @Param("keyword") String keyword, 
+               Pageable pageable);
 }

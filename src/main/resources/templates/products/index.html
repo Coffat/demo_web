@@ -36,99 +36,105 @@
         </div>
     </nav>
 
-    <!-- Products Header -->
-    <section class="products-header">
-        <div class="container">
-            <div class="header-content">
-                <div class="header-text" data-aos="fade-up" data-aos-duration="800">
-                    <h1 class="page-title">
-                        <span th:if="${searchQuery != null}">
-                            Kết quả tìm kiếm: <span class="search-term" th:text="${searchQuery}">keyword</span>
-                        </span>
-                        <span th:if="${categoryName != null}" th:text="${categoryName}">Danh mục</span>
-                        <span th:if="${searchQuery == null and categoryName == null}">Tất cả sản phẩm</span>
-                    </h1>
-                    <p class="page-subtitle">
-                        <span th:if="${searchQuery != null}">
-                            Tìm thấy <strong th:text="${totalElements}">0</strong> sản phẩm phù hợp
-                        </span>
-                        <span th:if="${categoryName != null}">
-                            Có <strong th:text="${totalElements}">0</strong> sản phẩm trong danh mục này
-                        </span>
-                        <span th:if="${searchQuery == null and categoryName == null}">
-                            Khám phá <strong th:text="${totalElements}">0</strong> sản phẩm hoa tươi đẹp tại StarShop
-                        </span>
-                    </p>
-                </div>
-                
-                <!-- Search & Filter Bar -->
-                <div class="header-actions" data-aos="fade-up" data-aos-duration="800" data-aos-delay="200">
-                    <div class="search-section">
-                        <form class="search-form" action="/products" method="GET">
-                            <div class="search-input-group">
-                                <svg class="search-icon w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd" />
-                                </svg>
-                                <input type="text" 
-                                       class="form-control search-input" 
-                                       name="search" 
-                                       placeholder="Tìm hoa theo tên, mô tả..."
-                                       th:value="${searchQuery}"
-                                       autocomplete="off">
-                                <button type="submit" class="btn-search">
-                                    Tìm kiếm
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Products Toolbar -->
-    <section class="products-toolbar">
-        <div class="container">
-            <div class="toolbar-content">
-                <!-- Results Info -->
-                <div class="results-info" data-aos="fade-up" data-aos-duration="600">
-                    <span class="results-text">
-                        Hiển thị 
-                        <strong th:text="${(currentPage * pageSize) + 1}">1</strong>-<strong th:text="${#lists.size(products) + (currentPage * pageSize)}">12</strong> 
-                        trong tổng số <strong th:text="${totalElements}">0</strong> sản phẩm
+    <!-- Products Header with Integrated Filter -->
+    <section class="products-header py-8">
+        <div class="container max-w-7xl mx-auto px-4">
+            <!-- Page Title -->
+            <div class="text-center mb-6" data-aos="fade-up">
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                    <span th:if="${searchQuery != null}">
+                        Kết quả tìm kiếm: <span class="text-primary" th:text="${searchQuery}">keyword</span>
                     </span>
-                </div>
+                    <span th:if="${categoryName != null}" th:text="${categoryName}">Danh mục</span>
+                    <span th:if="${searchQuery == null and categoryName == null}">Tất cả sản phẩm</span>
+                </h1>
+                <p class="text-gray-600">
+                    <span th:if="${searchQuery != null}">
+                        Tìm thấy <strong th:text="${totalElements}">0</strong> sản phẩm phù hợp
+                    </span>
+                    <span th:if="${categoryName != null}">
+                        Có <strong th:text="${totalElements}">0</strong> sản phẩm trong danh mục này
+                    </span>
+                    <span th:if="${searchQuery == null and categoryName == null}">
+                        Khám phá <strong th:text="${totalElements}">0</strong> sản phẩm hoa tươi đẹp tại StarShop
+                    </span>
+                </p>
+            </div>
 
-                <!-- Sort & View Options -->
-                <div class="toolbar-actions" data-aos="fade-up" data-aos-duration="600" data-aos-delay="200">
-                    <!-- Category Filter Dropdown -->
-                    <div class="sort-section">
-                        <label for="categoryFilter" class="sort-label">Danh mục:</label>
-                        <select class="form-select sort-select" id="categoryFilter" onchange="changeCategory(this.value)">
-                            <option value="" th:selected="${categoryId == null}">Tất cả danh mục</option>
-                            <option th:each="catalog : ${catalogs}" 
-                                    th:value="${catalog.id}" 
-                                    th:text="${catalog.value}"
-                                    th:selected="${catalog.id == categoryId}">
-                                Tên danh mục
-                            </option>
-                        </select>
-                    </div>
-                    
-                    <!-- Sort Dropdown -->
-                    <div class="sort-section">
-                        <label for="sortSelect" class="sort-label">Sắp xếp:</label>
-                        <select class="form-select sort-select" id="sortSelect" onchange="changeSorting(this.value)">
-                            <option value="newest" th:selected="${sortBy == 'newest'}">Mới nhất</option>
-                            <option value="oldest" th:selected="${sortBy == 'oldest'}">Cũ nhất</option>
-                            <option value="name" th:selected="${sortBy == 'name'}">Tên A-Z</option>
-                            <option value="price-asc" th:selected="${sortBy == 'price' && sortDirection == 'asc'}">Giá thấp đến cao</option>
-                            <option value="price-desc" th:selected="${sortBy == 'price' && sortDirection == 'desc'}">Giá cao đến thấp</option>
-                        </select>
-                    </div>
+            <!-- Unified Filter Box -->
+            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 mb-8" data-aos="fade-up" data-aos-delay="300">
+                <form method="GET" th:action="@{/products}" id="filterForm" class="space-y-4">
+                    <!-- Hidden inputs to preserve state -->
+                    <input type="hidden" name="page" value="0">
 
-                    <!-- View Toggle Removed -->
-                </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+                        <!-- Category Filter -->
+                        <div class="lg:col-span-3">
+                            <label for="categoryFilter" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-th-large mr-1"></i> Danh mục
+                            </label>
+                            <select name="categoryId" id="categoryFilter"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors">
+                                <option value="" th:selected="${categoryId == null}">Tất cả danh mục</option>
+                                <option th:each="catalog : ${catalogs}" 
+                                        th:value="${catalog.id}" 
+                                        th:text="${catalog.value}"
+                                        th:selected="${catalog.id == categoryId}">
+                                    Tên danh mục
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Search Input -->
+                        <div class="lg:col-span-5">
+                            <label for="searchInput" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-search mr-1"></i> Tìm kiếm theo tên
+                            </label>
+                            <div class="relative">
+                                <input type="text" id="searchInput" name="search" th:value="${searchQuery}" 
+                                       placeholder="Nhập tên sản phẩm..." 
+                                       class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors">
+                                <i class="fas fa-search absolute left-3 top-4 text-gray-400"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Sort Dropdown -->
+                        <div class="lg:col-span-3">
+                            <label for="sortSelect" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-sort mr-1"></i> Sắp xếp
+                            </label>
+                            <select name="sort" id="sortSelect" 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors">
+                                <option value="newest" th:selected="${sortBy == 'newest'}">Mới nhất</option>
+                                <option value="oldest" th:selected="${sortBy == 'oldest'}">Cũ nhất</option>
+                                <option value="name" th:selected="${sortBy == 'name'}">Tên A-Z</option>
+                                <option value="price-asc" th:selected="${sortBy == 'price' && sortDirection == 'asc'}">Giá thấp → cao</option>
+                                <option value="price-desc" th:selected="${sortBy == 'price' && sortDirection == 'desc'}">Giá cao → thấp</option>
+                            </select>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="lg:col-span-1 flex space-x-2">
+                            <button type="submit" 
+                                    class="flex-1 px-4 py-3 bg-pink-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-pink-700 transition-all duration-200 shadow-md hover:shadow-lg">
+                                <i class="fas fa-filter"></i>
+                                <span class="hidden lg:inline ml-1">Lọc</span>
+                            </button>
+                            <a th:href="@{/products}" 
+                               class="px-3 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-100 transition-all duration-200"
+                               title="Xóa bộ lọc">
+                                <i class="fas fa-redo"></i>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Results Info -->
+            <div class="text-center text-sm text-gray-600 mb-4" data-aos="fade-up">
+                Hiển thị 
+                <strong th:text="${(currentPage * pageSize) + 1}">1</strong>-<strong th:text="${#lists.size(products) + (currentPage * pageSize)}">12</strong> 
+                trong tổng số <strong th:text="${totalElements}">0</strong> sản phẩm
             </div>
         </div>
     </section>
@@ -296,97 +302,42 @@
             </div>
         </div>
     </nav>
-
-    <!-- Quick View Modal -->
-    <div class="modal fade" id="quickViewModal" tabindex="-1" aria-labelledby="quickViewModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="quickViewModalLabel">Xem nhanh sản phẩm</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-                </div>
-                <div class="modal-body" id="quickViewContent">
-                    <!-- Quick view content will be loaded here via AJAX -->
-                    <div class="loading-spinner">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Đang tải...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </th:block>
 
 <script>
-// Category filter functionality
-function changeCategory(value) {
-    const url = new URL(window.location);
-    
-    if (value) {
-        url.searchParams.set('categoryId', value);
-    } else {
-        url.searchParams.delete('categoryId');
-    }
-    
-    // Reset to first page when changing category
-    url.searchParams.set('page', '0');
-    
-    // Show loading state
+// Auto-submit form when any filter changes
+document.addEventListener('DOMContentLoaded', function() {
+    const filterForm = document.getElementById('filterForm');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const sortSelect = document.getElementById('sortSelect');
     const productsGrid = document.getElementById('productsGrid');
-    if (productsGrid) {
-        productsGrid.style.opacity = '0.6';
-    }
-    
-    window.location.href = url.toString();
-}
 
-// Sort functionality
-function changeSorting(value) {
-    const url = new URL(window.location);
-    
-    // Preserve categoryId if present
-    const categoryId = url.searchParams.get('categoryId');
-    
-    switch(value) {
-        case 'newest':
-            url.searchParams.set('sort', 'newest');
-            url.searchParams.delete('direction');
-            break;
-        case 'oldest':
-            url.searchParams.set('sort', 'oldest');
-            url.searchParams.delete('direction');
-            break;
-        case 'name':
-            url.searchParams.set('sort', 'name');
-            url.searchParams.set('direction', 'asc');
-            break;
-        case 'price-asc':
-            url.searchParams.set('sort', 'price');
-            url.searchParams.set('direction', 'asc');
-            break;
-        case 'price-desc':
-            url.searchParams.set('sort', 'price');
-            url.searchParams.set('direction', 'desc');
-            break;
+    if (!filterForm) return;
+
+    // Function to show loading state
+    function showLoadingState() {
+        if (productsGrid) {
+            productsGrid.style.opacity = '0.6';
+            productsGrid.style.transition = 'opacity 0.3s';
+        }
     }
-    
-    // Preserve categoryId
-    if (categoryId) {
-        url.searchParams.set('categoryId', categoryId);
+
+    // Auto-submit when category changes
+    if (categoryFilter) {
+        categoryFilter.addEventListener('change', function() {
+            showLoadingState();
+            filterForm.submit();
+        });
     }
-    
-    // Reset to first page
-    url.searchParams.set('page', '0');
-    
-    // Show loading state
-    const productsGrid = document.getElementById('productsGrid');
-    if (productsGrid) {
-        productsGrid.style.opacity = '0.6';
+
+    // Auto-submit when sort changes
+    if (sortSelect) {
+        sortSelect.addEventListener('change', function() {
+            showLoadingState();
+            filterForm.submit();
+        });
     }
-    
-    window.location.href = url.toString();
-}
+});
 
 // View toggle functionality
 document.addEventListener('DOMContentLoaded', function() {

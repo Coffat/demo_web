@@ -358,8 +358,9 @@
   function changeSorting(value) {
     const url = new URL(window.location);
 
-    // Preserve categoryId if present
+    // Preserve categoryId and search if present
     const categoryId = url.searchParams.get("categoryId");
+    const search = url.searchParams.get("search");
 
     // Update URL parameters based on sort value
     switch (value) {
@@ -386,8 +387,17 @@
     }
 
     // Preserve categoryId
-    if (categoryId) {
+    if (categoryId && categoryId !== "0" && categoryId !== "") {
       url.searchParams.set("categoryId", categoryId);
+    } else {
+      url.searchParams.delete("categoryId");
+    }
+
+    // Preserve search
+    if (search && search.trim() !== "") {
+      url.searchParams.set("search", search.trim());
+    } else {
+      url.searchParams.delete("search");
     }
 
     // Reset to first page
@@ -744,40 +754,11 @@ fetch('/api/wishlist/toggle', {
   // GLOBAL FUNCTIONS (for inline handlers)
   // ================================
 
-  // ================================
-  // CATEGORY FILTER FUNCTIONALITY
-  // ================================
-
-  function changeCategory(value) {
-    const url = new URL(window.location);
-    
-    if (value) {
-      url.searchParams.set("categoryId", value);
-    } else {
-      url.searchParams.delete("categoryId");
-    }
-    
-    // Reset to first page when changing category
-    url.searchParams.set("page", "0");
-    
-    // Show loading state
-    const productsGrid = document.getElementById("productsGrid");
-    if (productsGrid) {
-      productsGrid.style.opacity = "0.6";
-    }
-    
-    window.location.href = url.toString();
-  }
-
-  // ================================
-  // GLOBAL FUNCTIONS (for inline handlers)
-  // ================================
-
   // Make some functions globally accessible for inline event handlers
   window.changeSorting = changeSorting;
-  window.changeCategory = changeCategory;
   
   // Note: Wishlist now uses event delegation, no need for global function
+  // Note: changeCategory is now handled by form submit in index.html, not needed here
 
   window.buyNow = function (button) {
     const productId = button.dataset.productId;

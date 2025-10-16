@@ -29,6 +29,11 @@ spring:
     suffix: .html
     cache: false
   
+  # Locale Configuration for Vietnamese
+  web:
+    locale: vi_VN
+    locale-resolver: fixed
+  
   security:
     oauth2:
       client:

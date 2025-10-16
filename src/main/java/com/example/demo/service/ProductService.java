@@ -492,6 +492,24 @@ public class ProductService {
     }
 
     /**
+     * Combined filter: Find products by catalog AND search keyword
+     * @param catalogId Catalog ID (can be null)
+     * @param search Search keyword (can be null or empty)
+     * @param pageable Pagination information
+     * @return Page of products matching both filters
+     */
+    @Transactional(readOnly = true)
+    public Page<Product> findByCatalogAndSearch(Long catalogId, String search, Pageable pageable) {
+        String keyword = (search != null && !search.trim().isEmpty()) ? search.trim() : null;
+        log.info("Combined search: categoryId={}, keyword='{}'", catalogId, keyword);
+        
+        // Ensure we pass NULL if categoryId is 0 or null
+        Long finalCatalogId = (catalogId != null && catalogId > 0) ? catalogId : null;
+        
+        return productRepository.findByCatalogIdAndNameContainingIgnoreCase(finalCatalogId, keyword, pageable);
+    }
+
+    /**
      * Save uploaded image file
      */
     private String saveImage(MultipartFile image) throws IOException {
