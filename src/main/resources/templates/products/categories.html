@@ -1,69 +1,111 @@
 <!DOCTYPE html>
-<html lang="vi"
-      xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/main :: layout(~{::title}, ~{::meta}, ~{}, ~{::#content})}">
-
-<head>
+<html
+  lang="vi"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layouts/main :: layout(~{::title}, ~{::meta}, ~{::link}, ~{::#content})}"
+>
+  <head>
     <title th:text="${pageTitle} + ' - StarShop 🌸'">Danh mục sản phẩm</title>
-    <meta name="description" th:content="${pageDescription}">
-</head>
+    <meta name="description" th:content="${pageDescription}" />
+    <link rel="stylesheet" th:href="@{/css/products.css}" />
+  </head>
 
-<body>
-<div id="content">
-    <!-- Hero Section -->
-    <section class="bg-gradient-to-r from-primary-light via-cream to-secondary/20 py-20 text-center">
+  <body>
+    <div id="content">
+      <!-- Hero Section -->
+      <section
+        class="bg-gradient-to-r from-primary-light via-cream to-secondary/20 py-20 text-center"
+      >
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" data-aos="fade-up">
-            <h1 class="text-4xl md:text-5xl font-bold text-primary-dark mb-4" th:text="${pageTitle}">
-                Khám Phá Thế Giới Hoa
-            </h1>
-            <p class="text-lg text-gray-600 max-w-2xl mx-auto" th:text="${pageDescription}">
-                Từ những đóa hồng lãng mạn đến cúc họa mi tinh khôi, hãy tìm nguồn cảm hứng cho mọi khoảnh khắc đặc biệt.
-            </p>
+          <h1
+            class="text-4xl md:text-5xl font-bold text-primary-dark mb-4"
+            th:text="${pageTitle}"
+          >
+            Khám Phá Thế Giới Hoa
+          </h1>
+          <p
+            class="text-lg text-gray-600 max-w-2xl mx-auto"
+            th:text="${pageDescription}"
+          >
+            Từ những đóa hồng lãng mạn đến cúc họa mi tinh khôi, hãy tìm nguồn
+            cảm hứng cho mọi khoảnh khắc đặc biệt.
+          </p>
         </div>
-    </section>
+      </section>
 
-    <!-- Categories Grid -->
-    <section class="py-16 bg-white">
+      <!-- Categories Grid -->
+      <section class="py-16 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div th:if="${categories != null and not #lists.isEmpty(categories)}"
-                 class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          <div
+            th:if="${categories != null and not #lists.isEmpty(categories)}"
+            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"
+          >
+            <!-- Category Card -->
+            <div
+              th:each="category, iterStat : ${categories}"
+              class="group relative overflow-hidden rounded-lg shadow-soft hover:shadow-hover transition-all duration-300"
+              th:attr="data-aos='fade-up', data-aos-delay=${iterStat.index * 100}"
+            >
+              <a
+                th:href="@{/products(category=${category.value})}"
+                class="block"
+              >
+                <img
+                  th:src="${category.image != null ? category.image : '/images/placeholder.jpg'}"
+                  class="category-card-image"
+                  th:alt="${category.value}"
+                  loading="lazy"
+                />
+                <div
+                  class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"
+                ></div>
 
-                <!-- Category Card -->
-                <div th:each="category, iterStat : ${categories}"
-                     class="group relative overflow-hidden rounded-lg shadow-soft hover:shadow-hover transition-all duration-300"
-                     th:attr="data-aos='fade-up', data-aos-delay=${iterStat.index * 100}">
-                    <a th:href="@{/products(category=${category.value})}" class="block">
-                        <img th:src="@{'/images/categories/' + ${category.value} + '.jpg'}"
-                             th:alt="${category.value}"
-                             onerror="this.onerror=null;this.src='/images/placeholder.jpg';"
-                             class="w-full h-72 object-cover transform group-hover:scale-110 transition-transform duration-500"/>
-
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-
-                        <div class="absolute bottom-0 left-0 p-6">
-                            <h3 class="text-xl font-bold text-white mb-2" th:text="${category.value}">
-                                Tên Danh Mục
-                            </h3>
-                            <span class="inline-block bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full group-hover:bg-primary-dark transition-colors">
-                                Khám phá
-                            </span>
-                        </div>
-                    </a>
+                <div class="absolute bottom-0 left-0 p-6">
+                  <h3
+                    class="text-xl font-bold text-white mb-2"
+                    th:text="${category.value}"
+                  >
+                    Tên Danh Mục
+                  </h3>
+                  <span
+                    class="inline-block bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full group-hover:bg-primary-dark transition-colors"
+                  >
+                    Khám phá
+                  </span>
                 </div>
-
+              </a>
             </div>
+          </div>
 
-            <!-- Empty State -->
-            <div th:if="${categories == null or #lists.isEmpty(categories)}"
-                 class="text-center py-20">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2z" />
-                </svg>
-                <h3 class="mt-2 text-sm font-medium text-gray-900">Không có danh mục nào</h3>
-                <p class="mt-1 text-sm text-gray-500">Hiện tại chưa có danh mục sản phẩm nào được tìm thấy.</p>
-            </div>
+          <!-- Empty State -->
+          <div
+            th:if="${categories == null or #lists.isEmpty(categories)}"
+            class="text-center py-20"
+          >
+            <svg
+              class="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                vector-effect="non-scaling-stroke"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2z"
+              />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">
+              Không có danh mục nào
+            </h3>
+            <p class="mt-1 text-sm text-gray-500">
+              Hiện tại chưa có danh mục sản phẩm nào được tìm thấy.
+            </p>
+          </div>
         </div>
-    </section>
-</div>
-</body>
+      </section>
+    </div>
+  </body>
 </html>

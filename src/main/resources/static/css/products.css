@@ -1776,3 +1776,58 @@
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
+
+/* --- SỬA LỖI HIỂN THỊ ẢNH DANH MỤC BẰNG NHAU --- */
+
+/* 1. Thiết lập tỷ lệ khung hình cho thẻ chứa ảnh */
+.category-card {
+    display: block; /* Đảm bảo thẻ <a> hoạt động như một khối */
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    
+    /* ---- DÒNG QUAN TRỌNG NHẤT ---- */
+    /* Buộc thẻ phải có tỷ lệ 1:1 (hình vuông) */
+    aspect-ratio: 1 / 1; 
+}
+
+/* 2. Bắt buộc ảnh phải lấp đầy thẻ chứa */
+.category-card-image {
+    width: 100%;
+    height: 100%; /* Bắt buộc ảnh cao bằng thẻ chứa */
+    display: block;
+    transition: transform 0.3s ease;
+
+    /* ---- DÒNG QUAN TRỌNG NHẤT ---- */
+    /* Ảnh sẽ tự crop để vừa vặn mà không bị méo */
+    object-fit: cover; 
+}
+
+/* --- Các hiệu ứng hover có thể giữ nguyên --- */
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.category-card:hover .category-card-image {
+    transform: scale(1.05);
+}
+
+.category-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+    padding: 1.5rem 1rem;
+    text-align: center;
+}
+
+.category-overlay h3 {
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}   
