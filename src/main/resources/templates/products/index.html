@@ -24,8 +24,13 @@
                         Trang chủ
                     </a>
                 </li>
+                <li th:if="${categoryName != null}" class="breadcrumb-item">
+                    <a href="/products" class="breadcrumb-link">Sản phẩm</a>
+                </li>
                 <li class="breadcrumb-item active" aria-current="page">
-                    <span th:text="${searchQuery != null ? 'Tìm kiếm: ' + searchQuery : 'Sản phẩm'}">Sản phẩm</span>
+                    <span th:if="${searchQuery != null}" th:text="'Tìm kiếm: ' + ${searchQuery}">Tìm kiếm</span>
+                    <span th:if="${categoryName != null}" th:text="${categoryName}">Danh mục</span>
+                    <span th:if="${searchQuery == null and categoryName == null}">Sản phẩm</span>
                 </li>
             </ol>
         </div>
@@ -40,13 +45,17 @@
                         <span th:if="${searchQuery != null}">
                             Kết quả tìm kiếm: <span class="search-term" th:text="${searchQuery}">keyword</span>
                         </span>
-                        <span th:unless="${searchQuery != null}">Tất cả sản phẩm</span>
+                        <span th:if="${categoryName != null}" th:text="${categoryName}">Danh mục</span>
+                        <span th:if="${searchQuery == null and categoryName == null}">Tất cả sản phẩm</span>
                     </h1>
                     <p class="page-subtitle">
                         <span th:if="${searchQuery != null}">
                             Tìm thấy <strong th:text="${totalElements}">0</strong> sản phẩm phù hợp
                         </span>
-                        <span th:unless="${searchQuery != null}">
+                        <span th:if="${categoryName != null}">
+                            Có <strong th:text="${totalElements}">0</strong> sản phẩm trong danh mục này
+                        </span>
+                        <span th:if="${searchQuery == null and categoryName == null}">
                             Khám phá <strong th:text="${totalElements}">0</strong> sản phẩm hoa tươi đẹp tại StarShop
                         </span>
                     </p>
@@ -92,6 +101,20 @@
 
                 <!-- Sort & View Options -->
                 <div class="toolbar-actions" data-aos="fade-up" data-aos-duration="600" data-aos-delay="200">
+                    <!-- Category Filter Dropdown -->
+                    <div class="sort-section">
+                        <label for="categoryFilter" class="sort-label">Danh mục:</label>
+                        <select class="form-select sort-select" id="categoryFilter" onchange="changeCategory(this.value)">
+                            <option value="" th:selected="${categoryId == null}">Tất cả danh mục</option>
+                            <option th:each="catalog : ${catalogs}" 
+                                    th:value="${catalog.id}" 
+                                    th:text="${catalog.value}"
+                                    th:selected="${catalog.id == categoryId}">
+                                Tên danh mục
+                            </option>
+                        </select>
+                    </div>
+                    
                     <!-- Sort Dropdown -->
                     <div class="sort-section">
                         <label for="sortSelect" class="sort-label">Sắp xếp:</label>
@@ -236,7 +259,7 @@
                     <!-- Previous Page -->
                     <li class="page-item" th:classappend="${isFirst} ? 'disabled'">
                         <a class="page-link" 
-                           th:href="${isFirst} ? '#' : @{/products(page=${currentPage - 1}, size=${pageSize}, search=${searchQuery}, sort=${sortBy}, direction=${sortDirection})}"
+                           th:href="${isFirst} ? '#' : @{/products(page=${currentPage - 1}, size=${pageSize}, search=${searchQuery}, categoryId=${categoryId}, sort=${sortBy}, direction=${sortDirection})}"
                            aria-label="Trang trước">
                             <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
@@ -250,14 +273,14 @@
                         class="page-item" 
                         th:classappend="${pageNum == currentPage} ? 'active'">
                         <a class="page-link" 
-                           th:href="@{/products(page=${pageNum}, size=${pageSize}, search=${searchQuery}, sort=${sortBy}, direction=${sortDirection})}"
+                           th:href="@{/products(page=${pageNum}, size=${pageSize}, search=${searchQuery}, categoryId=${categoryId}, sort=${sortBy}, direction=${sortDirection})}"
                            th:text="${pageNum + 1}">1</a>
                     </li>
 
                     <!-- Next Page -->
                     <li class="page-item" th:classappend="${isLast} ? 'disabled'">
                         <a class="page-link" 
-                           th:href="${isLast} ? '#' : @{/products(page=${currentPage + 1}, size=${pageSize}, search=${searchQuery}, sort=${sortBy}, direction=${sortDirection})}"
+                           th:href="${isLast} ? '#' : @{/products(page=${currentPage + 1}, size=${pageSize}, search=${searchQuery}, categoryId=${categoryId}, sort=${sortBy}, direction=${sortDirection})}"
                            aria-label="Trang sau">
                             <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
@@ -296,9 +319,34 @@
 </th:block>
 
 <script>
+// Category filter functionality
+function changeCategory(value) {
+    const url = new URL(window.location);
+    
+    if (value) {
+        url.searchParams.set('categoryId', value);
+    } else {
+        url.searchParams.delete('categoryId');
+    }
+    
+    // Reset to first page when changing category
+    url.searchParams.set('page', '0');
+    
+    // Show loading state
+    const productsGrid = document.getElementById('productsGrid');
+    if (productsGrid) {
+        productsGrid.style.opacity = '0.6';
+    }
+    
+    window.location.href = url.toString();
+}
+
 // Sort functionality
 function changeSorting(value) {
     const url = new URL(window.location);
+    
+    // Preserve categoryId if present
+    const categoryId = url.searchParams.get('categoryId');
     
     switch(value) {
         case 'newest':
@@ -323,7 +371,20 @@ function changeSorting(value) {
             break;
     }
     
-    url.searchParams.set('page', '0'); // Reset to first page
+    // Preserve categoryId
+    if (categoryId) {
+        url.searchParams.set('categoryId', categoryId);
+    }
+    
+    // Reset to first page
+    url.searchParams.set('page', '0');
+    
+    // Show loading state
+    const productsGrid = document.getElementById('productsGrid');
+    if (productsGrid) {
+        productsGrid.style.opacity = '0.6';
+    }
+    
     window.location.href = url.toString();
 }
 

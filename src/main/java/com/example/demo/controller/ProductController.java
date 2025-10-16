@@ -8,6 +8,7 @@ import com.example.demo.service.WishlistService;
 import com.example.demo.entity.Review;
 import com.example.demo.dto.ProductDetailDTO;
 import com.example.demo.repository.ReviewRepository;
+import com.example.demo.repository.CatalogRepository;
 import com.example.demo.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,9 +43,10 @@ public class ProductController {
     private final ReviewRepository reviewRepository;
     private final WishlistService wishlistService;
     private final UserRepository userRepository;
+    private final CatalogRepository catalogRepository;
 
     /**
-     * Display products listing page
+     * Display products listing page with optional filtering and sorting
      * @param page Page number (default: 0)
      * @param size Page size (default: 12)
      * @param sort Sort criteria (default: newest)
@@ -52,6 +54,7 @@ public class ProductController {
      * @param search Search keyword
      * @param minPrice Minimum price filter
      * @param maxPrice Maximum price filter
+     * @param categoryId Category ID filter
      * @param model Spring Model
      * @return Products listing template
      */
@@ -64,6 +67,7 @@ public class ProductController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) Long categoryId,
             Model model,
             jakarta.servlet.http.HttpServletResponse response,
             Authentication authentication) {
@@ -74,23 +78,29 @@ public class ProductController {
         response.setHeader("Expires", "0");
         
         try {
-            log.info("Products listing request - page: {}, size: {}, sort: {}, search: '{}'", 
-                    page, size, sort, search);
+            log.info("Products listing request - page: {}, size: {}, sort: {}, search: '{}', categoryId: {}", 
+                    page, size, sort, search, categoryId);
 
-            // Create pageable with bounds checking
+            // 1. Setup Pagination
             int validPage = Math.max(0, page);
-            int validSize = Math.min(Math.max(1, size), 50); // Limit max size to 50
+            int validSize = Math.min(Math.max(1, size), 50);
             Pageable pageable = PageRequest.of(validPage, validSize);
 
             Page<Product> productsPage;
             
-            // Apply search if provided
-            if (search != null && !search.trim().isEmpty()) {
+            // 2. Apply Filtering Logic (Priority: Category -> Search -> Sort)
+            if (categoryId != null) {
+                // Filter by category
+                productsPage = productService.findByCatalog(categoryId, pageable);
+                model.addAttribute("categoryId", categoryId);
+                log.info("Filter by category ID: {}, found {} products", categoryId, productsPage.getTotalElements());
+            } else if (search != null && !search.trim().isEmpty()) {
+                // Filter by search
                 productsPage = productService.searchProducts(search, pageable);
                 model.addAttribute("searchQuery", search);
                 log.info("Search performed for: '{}', found {} products", search, productsPage.getTotalElements());
             } else {
-                // Apply sorting
+                // Default sorting
                 productsPage = productService.getProductsSorted(sort, direction, pageable);
             }
 
@@ -100,7 +110,7 @@ public class ProductController {
                 model.addAttribute("maxPrice", maxPrice);
             }
 
-            // Add model attributes
+            // 3. Add Model Attributes
             model.addAttribute("productsPage", productsPage);
             model.addAttribute("products", productsPage.getContent());
             model.addAttribute("currentPage", validPage);
@@ -110,7 +120,10 @@ public class ProductController {
             model.addAttribute("sortBy", sort);
             model.addAttribute("sortDirection", direction);
             
-            // Wishlist product IDs for current user (for SSR wishlist state)
+            // 4. Load All Catalogs for Filter Dropdown
+            model.addAttribute("catalogs", catalogRepository.findAll());
+
+            // 5. Wishlist product IDs for current user (for SSR wishlist state)
             try {
                 if (authentication != null && authentication.isAuthenticated()) {
                     userRepository.findByEmail(authentication.getName()).ifPresent(user -> {
@@ -121,25 +134,32 @@ public class ProductController {
                     model.addAttribute("wishlistProductIds", java.util.Collections.emptySet());
                 }
             } catch (Exception ex) {
-                // On error, fallback to empty set to avoid breaking page
                 model.addAttribute("wishlistProductIds", java.util.Collections.emptySet());
             }
             
-            // Pagination helper attributes
+            // 6. Pagination helper attributes
             model.addAttribute("hasPrevious", productsPage.hasPrevious());
             model.addAttribute("hasNext", productsPage.hasNext());
             model.addAttribute("isFirst", productsPage.isFirst());
             model.addAttribute("isLast", productsPage.isLast());
 
-            // Breadcrumb removed - no longer extending BaseController
+            // 7. Set page metadata
+            String pageTitle = "Tất cả sản phẩm";
+            String pageDescription = "Khám phá bộ sưu tập hoa tươi đa dạng tại StarShop. Hoa sinh nhật, hoa tình yêu, hoa cưới và nhiều loại hoa khác với chất lượng tốt nhất.";
 
-            // Set page metadata
-            model.addAttribute("pageTitle", search != null && !search.trim().isEmpty() ? 
-                    "Tìm kiếm: " + search : "Tất cả sản phẩm");
-            model.addAttribute("pageDescription", "Khám phá bộ sưu tập hoa tươi đa dạng tại StarShop. " +
-                    "Hoa sinh nhật, hoa tình yêu, hoa cưới và nhiều loại hoa khác với chất lượng tốt nhất.");
+            if (search != null && !search.trim().isEmpty()) {
+                pageTitle = "Tìm kiếm: " + search;
+            } else if (categoryId != null) {
+                catalogRepository.findById(categoryId).ifPresent(c -> 
+                    model.addAttribute("categoryName", c.getValue())
+                );
+                pageTitle = (String) model.getAttribute("categoryName") + " | Danh mục sản phẩm";
+            }
             
-            // Add page-specific JavaScript
+            model.addAttribute("pageTitle", pageTitle);
+            model.addAttribute("pageDescription", pageDescription);
+            
+            // 8. Add page-specific JavaScript
             model.addAttribute("additionalJS", List.of("/js/products.js"));
 
             log.info("Products listing completed - showing {} products on page {}/{}", 
@@ -277,6 +297,9 @@ public class ProductController {
     @GetMapping("/categories")
     public String categories(Model model) {
         log.info("Categories page request");
+        
+        // Load all categories
+        model.addAttribute("categories", catalogRepository.findAll());
         
         // Set page metadata
         model.addAttribute("pageTitle", "Danh mục sản phẩm");

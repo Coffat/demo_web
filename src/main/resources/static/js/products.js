@@ -358,6 +358,9 @@
   function changeSorting(value) {
     const url = new URL(window.location);
 
+    // Preserve categoryId if present
+    const categoryId = url.searchParams.get("categoryId");
+
     // Update URL parameters based on sort value
     switch (value) {
       case "newest":
@@ -380,6 +383,11 @@
         url.searchParams.set("sort", "price");
         url.searchParams.set("direction", "desc");
         break;
+    }
+
+    // Preserve categoryId
+    if (categoryId) {
+      url.searchParams.set("categoryId", categoryId);
     }
 
     // Reset to first page
@@ -736,8 +744,38 @@ fetch('/api/wishlist/toggle', {
   // GLOBAL FUNCTIONS (for inline handlers)
   // ================================
 
+  // ================================
+  // CATEGORY FILTER FUNCTIONALITY
+  // ================================
+
+  function changeCategory(value) {
+    const url = new URL(window.location);
+    
+    if (value) {
+      url.searchParams.set("categoryId", value);
+    } else {
+      url.searchParams.delete("categoryId");
+    }
+    
+    // Reset to first page when changing category
+    url.searchParams.set("page", "0");
+    
+    // Show loading state
+    const productsGrid = document.getElementById("productsGrid");
+    if (productsGrid) {
+      productsGrid.style.opacity = "0.6";
+    }
+    
+    window.location.href = url.toString();
+  }
+
+  // ================================
+  // GLOBAL FUNCTIONS (for inline handlers)
+  // ================================
+
   // Make some functions globally accessible for inline event handlers
   window.changeSorting = changeSorting;
+  window.changeCategory = changeCategory;
   
   // Note: Wishlist now uses event delegation, no need for global function
 
